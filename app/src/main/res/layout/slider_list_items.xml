@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:layout_margin="15dp"
+    android:layout_weight="1"
+    android:gravity="center"
+    android:orientation="vertical"
+    android:padding="15dp">
+
+    <ImageView
+        android:id="@+id/slider_images"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_weight=".5"
+        android:padding="10dp"
+        android:src="@drawable/country" />
+
+    <TextView
+        android:id="@+id/slider_name"
+        style="@style/TextAppearance.AppCompat.Title"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/slider_images"
+        android:layout_weight=".5"
+        android:hint="Sample of Text"
+        android:textAlignment="center" />
+</RelativeLayout>

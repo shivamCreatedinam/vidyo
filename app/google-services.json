@@ -1,0 +1,40 @@
+{
+  "project_info": {
+    "project_number": "917487541105",
+    "firebase_url": "https://vidyo-e12e1.firebaseio.com",
+    "project_id": "vidyo-e12e1",
+    "storage_bucket": "vidyo-e12e1.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:917487541105:android:43fa7e392209f7b1e934d0",
+        "android_client_info": {
+          "package_name": "com.createdinam.vidyo"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "917487541105-rv4ea4rntol7edh2ltpgn3gudvrr9l6a.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAQB12cVy8fvAq4YWZsHzCWYJrDjohEuqk"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "917487541105-rv4ea4rntol7edh2ltpgn3gudvrr9l6a.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
