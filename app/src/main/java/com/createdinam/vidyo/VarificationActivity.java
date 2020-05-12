@@ -12,6 +12,7 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
 
+import com.createdinam.vidyo.model.UserInfo;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.android.gms.tasks.TaskExecutors;
@@ -20,8 +21,11 @@ import com.google.firebase.FirebaseException;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException;
+import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.auth.PhoneAuthCredential;
 import com.google.firebase.auth.PhoneAuthProvider;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
 
 import java.util.concurrent.TimeUnit;
 
@@ -30,14 +34,16 @@ public class VarificationActivity extends AppCompatActivity {
     private static SharedPreferences.Editor myEdit;
     Button buttonSignIn;
     //These are the objects needed
+    private static String mobile;
     //It is the verification id that will be sent to the user
     private String mVerificationId;
-
+    private String mUserID;
     //The edittext to input the code
     private EditText editTextCode;
 
     //firebase auth object
     private FirebaseAuth mAuth;
+    private DatabaseReference mReference;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -49,13 +55,14 @@ public class VarificationActivity extends AppCompatActivity {
 
         //initializing objects
         mAuth = FirebaseAuth.getInstance();
+        mReference = FirebaseDatabase.getInstance().getReference("USERS");
         editTextCode = findViewById(R.id.editTextCode);
 
 
         //getting mobile number from the previous activity
         //and sending the verification code to the number
         Intent intent = getIntent();
-        String mobile = intent.getStringExtra("mobile");
+        mobile = intent.getStringExtra("mobile");
         sendVerificationCode(mobile);
 
         buttonSignIn.setOnClickListener(new View.OnClickListener() {
@@ -130,14 +137,17 @@ public class VarificationActivity extends AppCompatActivity {
                     public void onComplete(@NonNull Task<AuthResult> task) {
                         if (task.isSuccessful()) {
                             //verification successful we will start the profile activity
+                            FirebaseUser user = mAuth.getCurrentUser();
+                            mUserID = user.getUid();
+                            setDataSaveToServer(mUserID,"private_user",mobile);
                             Log.d("status", "" + task.isSuccessful());
                             myEdit.putBoolean("status", task.isSuccessful());
                             myEdit.putString("user_type", "private_user");
+                            myEdit.putString("user_id", mUserID);
                             myEdit.commit();
                             Intent intent = new Intent(VarificationActivity.this, MainActivity.class);
                             intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
                             startActivity(intent);
-
                         } else {
 
                             //verification unsuccessful.. display an error message
@@ -147,17 +157,24 @@ public class VarificationActivity extends AppCompatActivity {
                             if (task.getException() instanceof FirebaseAuthInvalidCredentialsException) {
                                 message = "Invalid code entered...";
                             }
-
-                            Snackbar snackbar = Snackbar.make(findViewById(R.id.parent), message, Snackbar.LENGTH_LONG);
-                            snackbar.setAction("Dismiss", new View.OnClickListener() {
-                                @Override
-                                public void onClick(View v) {
-
-                                }
-                            });
-                            snackbar.show();
+                            Toast.makeText(VarificationActivity.this, ""+message, Toast.LENGTH_SHORT).show();
                         }
                     }
                 });
+    }
+
+    private void setDataSaveToServer(String id,String name,String mob){
+        // store user info to server
+        UserInfo userInfo = new UserInfo(id, name, mob);
+        mReference.child(mUserID).setValue(userInfo).addOnCompleteListener(new OnCompleteListener<Void>() {
+            @Override
+            public void onComplete(@NonNull Task<Void> task) {
+                if (task.isSuccessful()) {
+                    Toast.makeText(VarificationActivity.this, "Save To Server ", Toast.LENGTH_SHORT).show();
+                }else{
+                    Toast.makeText(VarificationActivity.this, "Something Went Wrong....", Toast.LENGTH_SHORT).show();
+                }
+            }
+        });
     }
 }

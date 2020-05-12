@@ -51,7 +51,9 @@ dependencies {
     // glide
     implementation 'com.github.bumptech.glide:glide:4.11.0'
     implementation 'com.diegodobelo.expandingview:expanding-view:0.9.4'
-
     // lib gif
     implementation 'pl.droidsonroids.gif:android-gif-drawable:1.2.19'
+    // video lib
+    compile(name:'sinch-android-rtc', version:'+', ext:'aar')
+
 }

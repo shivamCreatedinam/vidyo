@@ -4,7 +4,6 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
-import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import android.content.Context;
@@ -24,7 +23,6 @@ import com.android.volley.VolleyError;
 import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
 import com.createdinam.vidyo.customloder.CustomLoader;
-import com.createdinam.vidyo.global.GlobalInit;
 import com.createdinam.vidyo.global.Meme;
 import com.createdinam.vidyo.global.SliderAdapter;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
@@ -95,8 +93,7 @@ public class MainActivity extends AppCompatActivity {
         recyclerView = findViewById(R.id.slider_list_view);
         // request data
         requestQueue = Volley.newRequestQueue(MainActivity.this.getApplicationContext());
-        onCreateNewsFileds(GlobalInit.MEMES_URL);
-
+        //onCreateNewsFileds(GlobalInit.MEMES_URL);
     }
 
     private void getLogoutActivity() {
