@@ -6,35 +6,28 @@
     android:layout_height="match_parent"
     android:orientation="vertical"
     tools:context=".MainActivity">
-
-    <FrameLayout
-        android:id="@+id/fragment_container"
+    <RelativeLayout
+        android:id="@+id/home_content_container"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_above="@id/bottom_layout_navigation"/>
+        android:layout_marginBottom="?attr/actionBarSize">
 
-    <TextView
-        android:id="@+id/user_type"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Hello World!"
-        android:gravity="center"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintLeft_toLeftOf="parent"
-        app:layout_constraintRight_toRightOf="parent"
-        android:visibility="gone"
-        app:layout_constraintTop_toTopOf="parent" />
+        <ListView
+            android:id="@+id/listView_items"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"/>
 
-    <com.google.android.material.bottomnavigation.BottomNavigationView
-        android:id="@+id/bottom_layout_navigation"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_alignParentBottom="true"
-        android:layout_gravity="bottom"
-        app:labelVisibilityMode="auto"
-        app:layout_behavior="@string/hide_bottom_view_on_scroll_behavior"
-        app:layout_insetEdge="bottom"
-        android:background="@color/icon_color"
-        app:menu="@menu/bottom_navigation_items" />
+        <com.google.android.material.floatingactionbutton.FloatingActionButton
+            android:id="@+id/upload_new_feed"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_margin="20dp"
+            android:layout_alignParentBottom="true"
+            android:layout_alignParentRight="true"
+            android:backgroundTint="@color/background"
+            android:src="@android:drawable/ic_dialog_email" />
+    </RelativeLayout>
+
+    <include layout="@layout/bottom_navigation" />
 
 </RelativeLayout>

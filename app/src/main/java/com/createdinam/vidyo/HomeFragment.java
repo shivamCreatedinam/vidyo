@@ -2,12 +2,15 @@ package com.createdinam.vidyo;
 
 import android.content.Context;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.Filter;
 import android.widget.Filterable;
+import android.widget.ListView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -21,26 +24,30 @@ import com.android.volley.RequestQueue;
 import com.android.volley.toolbox.Volley;
 import com.createdinam.vidyo.customloder.CustomLoader;
 import com.createdinam.vidyo.global.Meme;
-import com.sinch.android.rtc.Sinch;
-import com.sinch.android.rtc.SinchClient;
-import com.sinch.android.rtc.calling.CallClient;
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
 import org.json.JSONObject;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+
+import static android.util.Log.d;
 
 
 public class HomeFragment extends Fragment implements Filterable, View.OnClickListener {
     RequestQueue requestQueue;
     Context mContext;
-    RecyclerView recyclerView;
+    FloatingActionButton feedBtn;
     ArrayList<Meme> memes = new ArrayList<Meme>();
     JSONObject obj = null;
+    ListView mListView;
     private CustomLoader mCustomLoader;
-    // sinch clint
-    // button
-    Button btnCalling;
-
+    String[] values = new String[] { "Android", "iPhone", "WindowsMobile",
+            "Blackberry", "WebOS", "Ubuntu", "Windows7", "Max OS X",
+            "Linux", "OS/2", "Ubuntu", "Windows7", "Max OS X", "Linux",
+            "OS/2", "Ubuntu", "Windows7", "Max OS X", "Linux", "OS/2",
+            "Android", "iPhone", "WindowsMobile" };
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
@@ -49,33 +56,15 @@ public class HomeFragment extends Fragment implements Filterable, View.OnClickLi
         final FragmentActivity activity = getActivity();
         LinearLayoutManager manager = new LinearLayoutManager(activity);
         mCustomLoader = new CustomLoader(activity);
-        recyclerView = view.findViewById(R.id.slider_list_view);
-        btnCalling = view.findViewById(R.id.calling_me);
-        btnCalling.setOnClickListener(this);
-        recyclerView.setLayoutManager(manager);
+        feedBtn = view.findViewById(R.id.upload_new_feed);
+
+        mListView = (ListView)view.findViewById(R.id.listView_items);
         // request data
+        ArrayAdapter<String> adapter = new ArrayAdapter<String>(getActivity(), android.R.layout.simple_list_item_1, values);
+        mListView.setAdapter(adapter);
+
         requestQueue = Volley.newRequestQueue(getActivity().getApplicationContext());
-        //onCreateNewsFileds();
         return inflater.inflate(R.layout.home_layout, container, false);
-    }
-
-    public void onCreateNewsFileds() {
-        // Instantiate a SinchClient using the SinchClientBuilder.
-        android.content.Context context = getActivity().getApplicationContext();
-        final SinchClient sinchClient = Sinch.getSinchClientBuilder().context(context)
-                .applicationKey("1cc9f561-d2c4-4a1b-bad8-d60f30e4fa5a")
-                .applicationSecret("8Z3QZ8Y6w06cll00HE0NeQ==")
-                .environmentHost("clientapi.sinch.com")
-                .userId("151899")
-                .build();
-        // Specify the client capabilities.
-        sinchClient.setSupportCalling(true);
-        CallClient callClient = sinchClient.getCallClient();
-        callClient.callPhoneNumber("+919999870918");
-    }
-
-    private void callingClient(){
-
     }
 
     @Override
@@ -86,8 +75,8 @@ public class HomeFragment extends Fragment implements Filterable, View.OnClickLi
     @Override
     public void onClick(View v) {
         switch (v.getId()){
-            case R.id.calling_me:
-                Toast.makeText(mContext, "This is called", Toast.LENGTH_SHORT).show();
+            case R.id.upload_new_feed:
+                Log.d("clicked","feed btn");
                 break;
         }
     }

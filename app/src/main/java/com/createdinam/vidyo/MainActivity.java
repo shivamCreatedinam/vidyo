@@ -2,11 +2,15 @@ package com.createdinam.vidyo;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.NotificationCompat;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.RecyclerView;
 
+import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.util.Log;
@@ -25,7 +29,13 @@ import com.android.volley.toolbox.Volley;
 import com.createdinam.vidyo.customloder.CustomLoader;
 import com.createdinam.vidyo.global.Meme;
 import com.createdinam.vidyo.global.SliderAdapter;
+import com.createdinam.vidyo.model.ServicesActivity;
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
+import com.google.firebase.iid.FirebaseInstanceId;
+import com.google.firebase.iid.InstanceIdResult;
+import com.google.firebase.messaging.FirebaseMessaging;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -44,10 +54,7 @@ public class MainActivity extends AppCompatActivity {
     private static final int PERIOD = 2000;
     SweetAlertDialog sweetAlertDialog;
     BottomNavigationView mBottomNavigationView;
-    TextView textView;
     SliderAdapter sliderAdapter;
-    Context context;
-    RecyclerView recyclerView;
     ArrayList<Meme> memes = new ArrayList<Meme>();
     JSONObject obj = null;
     private CustomLoader mCustomLoader;
@@ -57,10 +64,8 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         requestQueue = Volley.newRequestQueue(getApplicationContext());
-        //onCreateNewsFileds(GlobalInit.POST_URL);
-        textView = findViewById(R.id.user_type);
-        getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container,new HomeFragment()).commit();
         mBottomNavigationView =  findViewById(R.id.bottom_layout_navigation);
+        FirebaseMessaging.getInstance().setAutoInitEnabled(true);
         mBottomNavigationView.setOnNavigationItemSelectedListener(new BottomNavigationView.OnNavigationItemSelectedListener() {
             @Override
             public boolean onNavigationItemSelected(@NonNull MenuItem item) {
@@ -70,7 +75,6 @@ public class MainActivity extends AppCompatActivity {
                         selectedFragment = new HomeFragment();
                         break;
                     case R.id.services:
-                        selectedFragment = new StatusFragment();
                         break;
                     case R.id.contact:
                         selectedFragment = new NewsFragment();
@@ -79,7 +83,6 @@ public class MainActivity extends AppCompatActivity {
                         selectedFragment = new SettingFragment();
                         break;
                 }
-                getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container,selectedFragment).commit();
                 return true;
             }
         });
@@ -87,13 +90,28 @@ public class MainActivity extends AppCompatActivity {
         status = sharedPreferences.getBoolean("status", true);
         user_type = sharedPreferences.getString("user_type", "");
         if (status){
-            textView.setText(user_type);
+            // status
         }
         mCustomLoader = new CustomLoader(MainActivity.this);
-        recyclerView = findViewById(R.id.slider_list_view);
         // request data
         requestQueue = Volley.newRequestQueue(MainActivity.this.getApplicationContext());
-        //onCreateNewsFileds(GlobalInit.MEMES_URL);
+    }
+
+    public void showNotification(String title,String message){
+        NotificationCompat.Builder builder =
+                new NotificationCompat.Builder(this)
+                        .setSmallIcon(R.drawable.ic_stat_name)
+                        .setContentTitle(title)
+                        .setContentText(message);
+
+        Intent notificationIntent = new Intent(this, MainActivity.class);
+        PendingIntent contentIntent = PendingIntent.getActivity(this, 0, notificationIntent,
+                PendingIntent.FLAG_UPDATE_CURRENT);
+        builder.setContentIntent(contentIntent);
+
+        // Add as notification
+        NotificationManager manager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+        manager.notify(0, builder.build());
     }
 
     private void getLogoutActivity() {
@@ -138,7 +156,7 @@ public class MainActivity extends AppCompatActivity {
         return false;
     }
 
-    private void onCreateNewsFileds(String post_url) {
+   /* private void onCreateNewsFileds(String post_url) {
         mCustomLoader.startLoadingAlertBox();
         StringRequest stringRequest = new StringRequest(Request.Method.GET, post_url, new Response.Listener<String>() {
             @Override
@@ -172,7 +190,6 @@ public class MainActivity extends AppCompatActivity {
                             if (memes.size() > 0) {
                                 Log.d("total_memes",""+memes.size());
                                 sliderAdapter = new SliderAdapter(MainActivity.this,memes);
-                                recyclerView.setAdapter(sliderAdapter);
                                 sliderAdapter.notifyDataSetChanged();
                                 mCustomLoader.setCancelAlertDailog();
                             }else{
@@ -198,5 +215,5 @@ public class MainActivity extends AppCompatActivity {
             }
         });
         requestQueue.add(stringRequest);
-    }
+    } */
 }
