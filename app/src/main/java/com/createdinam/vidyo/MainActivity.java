@@ -1,10 +1,9 @@
 package com.createdinam.vidyo;
 
-import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.NotificationCompat;
 import androidx.core.content.ContextCompat;
-import androidx.fragment.app.Fragment;
+import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import android.app.NotificationManager;
@@ -15,35 +14,35 @@ import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.KeyEvent;
-import android.view.MenuItem;
+import android.view.View;
 import android.widget.Button;
-import android.widget.TextView;
 import android.widget.Toast;
 
-import com.android.volley.Request;
 import com.android.volley.RequestQueue;
-import com.android.volley.Response;
-import com.android.volley.VolleyError;
-import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
 import com.createdinam.vidyo.customloder.CustomLoader;
 import com.createdinam.vidyo.global.Meme;
 import com.createdinam.vidyo.global.SliderAdapter;
-import com.createdinam.vidyo.model.ServicesActivity;
-import com.google.android.gms.tasks.OnCompleteListener;
-import com.google.android.gms.tasks.Task;
-import com.google.android.material.bottomnavigation.BottomNavigationView;
-import com.google.firebase.iid.FirebaseInstanceId;
-import com.google.firebase.iid.InstanceIdResult;
+import com.createdinam.vidyo.global.UnsafeOkHttpClient;
+import com.createdinam.vidyo.model.GetPostFromWeb;
+import com.createdinam.vidyo.model.PostAdapter;
+import com.createdinam.vidyo.model.PostModel;
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.firebase.messaging.FirebaseMessaging;
 
-import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 
 import cn.pedant.SweetAlert.SweetAlertDialog;
+import okhttp3.OkHttpClient;
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
+import retrofit2.Retrofit;
+import retrofit2.converter.gson.GsonConverterFactory;
 
 public class MainActivity extends AppCompatActivity {
     private static SharedPreferences sharedPreferences;
@@ -53,48 +52,73 @@ public class MainActivity extends AppCompatActivity {
     private long lastPressedTime;
     private static final int PERIOD = 2000;
     SweetAlertDialog sweetAlertDialog;
-    BottomNavigationView mBottomNavigationView;
-    SliderAdapter sliderAdapter;
-    ArrayList<Meme> memes = new ArrayList<Meme>();
-    JSONObject obj = null;
     private CustomLoader mCustomLoader;
-
+    FloatingActionButton mFloatingActionButton;
+    RecyclerView video_list_items;
+    Retrofit retrofit;
+    List<PostModel> mList;
+    GetPostFromWeb getPostFromWeb;
+    PostAdapter postAdapter;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        // init
+        mFloatingActionButton = findViewById(R.id.upload_new_feed);
+        video_list_items = findViewById(R.id.video_list_items);
+        LinearLayoutManager layoutManager = new LinearLayoutManager(this);
+        video_list_items.setLayoutManager(layoutManager);
+        postAdapter = new PostAdapter(mList,this);
+        // setup
         requestQueue = Volley.newRequestQueue(getApplicationContext());
-        mBottomNavigationView =  findViewById(R.id.bottom_layout_navigation);
         FirebaseMessaging.getInstance().setAutoInitEnabled(true);
-        mBottomNavigationView.setOnNavigationItemSelectedListener(new BottomNavigationView.OnNavigationItemSelectedListener() {
-            @Override
-            public boolean onNavigationItemSelected(@NonNull MenuItem item) {
-                Fragment selectedFragment = null;
-                switch (item.getItemId()){
-                    case R.id.home:
-                        selectedFragment = new HomeFragment();
-                        break;
-                    case R.id.services:
-                        break;
-                    case R.id.contact:
-                        selectedFragment = new NewsFragment();
-                        break;
-                    case R.id.about:
-                        selectedFragment = new SettingFragment();
-                        break;
-                }
-                return true;
-            }
-        });
         sharedPreferences = getSharedPreferences("MySharedPref", MODE_PRIVATE);
         status = sharedPreferences.getBoolean("status", true);
         user_type = sharedPreferences.getString("user_type", "");
         if (status){
             // status
         }
+        // loader
         mCustomLoader = new CustomLoader(MainActivity.this);
         // request data
         requestQueue = Volley.newRequestQueue(MainActivity.this.getApplicationContext());
+        mFloatingActionButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                clickEventInFloationgAction();
+            }
+        });
+        // get request
+        OkHttpClient okHttpClient = UnsafeOkHttpClient.getUnsafeOkHttpClient();
+        retrofit = new Retrofit.Builder()
+                .baseUrl("https://createdinam.com/wp-json/wl/v1/")
+                .client(okHttpClient)
+                .addConverterFactory(GsonConverterFactory.create())
+                .build();
+        getPostFromWeb = retrofit.create(GetPostFromWeb.class);
+        Call<List<PostModel>> call = getPostFromWeb.getPost();
+        call.enqueue(new Callback<List<PostModel>>() {
+            @Override
+            public void onResponse(Call<List<PostModel>> call, Response<List<PostModel>> response) {
+                if (response.isSuccessful()) {
+                    Log.d("status",""+response);
+                    List<PostModel> data = response.body();
+                    postAdapter.setPostAdapter(data);
+                    video_list_items.setAdapter(postAdapter);
+                }else{
+                    Log.d("error_inner", "" + response.message());
+                }
+            }
+
+            @Override
+            public void onFailure(Call<List<PostModel>> call, Throwable t) {
+                Log.d("error_main", "" + t.getStackTrace());
+            }
+        });
+    }
+
+    private void clickEventInFloationgAction() {
+        Toast.makeText(this, "You Clicked!", Toast.LENGTH_SHORT).show();
     }
 
     public void showNotification(String title,String message){
@@ -155,65 +179,4 @@ public class MainActivity extends AppCompatActivity {
         }
         return false;
     }
-
-   /* private void onCreateNewsFileds(String post_url) {
-        mCustomLoader.startLoadingAlertBox();
-        StringRequest stringRequest = new StringRequest(Request.Method.GET, post_url, new Response.Listener<String>() {
-            @Override
-            public void onResponse(String response) {
-
-                try {
-                    obj = new JSONObject(response);
-                    int maxLogSize = 1000;
-                    for (int i = 0; i <= response.length() / maxLogSize; i++) {
-                        int start1 = i * maxLogSize;
-                        int end = (i + 1) * maxLogSize;
-                        end = end > response.length() ? response.length() : end;
-                        //Log.d("data", response.substring(start1, end));
-                    }
-                    if (obj.get("success").toString().matches("true")) {
-                        memes.clear();
-                        JSONArray jsonArray = obj.getJSONObject("data").getJSONArray("memes");
-                        if (jsonArray.length() != 0) {
-                            for (int i = 0; i < jsonArray.length(); i++) {
-                                Meme m = new Meme();
-                                JSONObject jsonObject = jsonArray.getJSONObject(i);
-                                m.setId(jsonObject.getString("id"));
-                                m.setName(jsonObject.getString("name"));
-                                m.setUrl(jsonObject.getString("url"));
-                                m.setWidth(Integer.valueOf(jsonObject.getString("width")));
-                                m.setHeight(Integer.valueOf(jsonObject.getString("height")));
-                                m.setBoxCount(Integer.valueOf(jsonObject.getString("box_count")));
-
-                                memes.add(m);
-                            }
-                            if (memes.size() > 0) {
-                                Log.d("total_memes",""+memes.size());
-                                sliderAdapter = new SliderAdapter(MainActivity.this,memes);
-                                sliderAdapter.notifyDataSetChanged();
-                                mCustomLoader.setCancelAlertDailog();
-                            }else{
-                                Log.d("total_memes",""+memes.size());
-                            }
-                        }
-                    }
-
-                } catch (Exception ex) {
-                    Log.d("error-", ex.getMessage());
-                }
-
-                try {
-
-                } catch (Exception ex) {
-                    Log.d("error_", ex.getMessage());
-                }
-            }
-        }, new Response.ErrorListener() {
-            @Override
-            public void onErrorResponse(VolleyError error) {
-                Log.d("error-response ", "" + error.getMessage());
-            }
-        });
-        requestQueue.add(stringRequest);
-    } */
 }
