@@ -1,19 +1,23 @@
 package com.createdinam.vidyo;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.NotificationCompat;
 import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.KeyEvent;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.Toast;
@@ -21,12 +25,16 @@ import android.widget.Toast;
 import com.android.volley.RequestQueue;
 import com.android.volley.toolbox.Volley;
 import com.createdinam.vidyo.customloder.CustomLoader;
+import com.createdinam.vidyo.global.CurvedBottomNavigationView;
 import com.createdinam.vidyo.global.Meme;
 import com.createdinam.vidyo.global.SliderAdapter;
 import com.createdinam.vidyo.global.UnsafeOkHttpClient;
 import com.createdinam.vidyo.model.GetPostFromWeb;
 import com.createdinam.vidyo.model.PostAdapter;
 import com.createdinam.vidyo.model.PostModel;
+import com.google.android.exoplayer2.ExoPlaybackException;
+import com.google.android.exoplayer2.PlaybackParameters;
+import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.firebase.messaging.FirebaseMessaging;
 
@@ -38,13 +46,14 @@ import java.util.Objects;
 
 import cn.pedant.SweetAlert.SweetAlertDialog;
 import okhttp3.OkHttpClient;
+import okhttp3.ResponseBody;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity  implements BottomNavigationView.OnNavigationItemSelectedListener {
     private static SharedPreferences sharedPreferences;
     private static String user_type;
     private static Boolean status;
@@ -59,11 +68,18 @@ public class MainActivity extends AppCompatActivity {
     List<PostModel> mList;
     GetPostFromWeb getPostFromWeb;
     PostAdapter postAdapter;
+    SwipeRefreshLayout swipeRefreshLayout;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        // init navigation
+        CurvedBottomNavigationView mView = findViewById(R.id.customBottomBar);
+        mView.inflateMenu(R.menu.bottom_navigation_items);
+        //mView.setSelectedItemId(R.id.action_schedules);
+        mView.setOnNavigationItemSelectedListener(MainActivity.this);
         // init
+        swipeRefreshLayout = findViewById(R.id.pull_down_to_refresh);
         mFloatingActionButton = findViewById(R.id.upload_new_feed);
         video_list_items = findViewById(R.id.video_list_items);
         LinearLayoutManager layoutManager = new LinearLayoutManager(this);
@@ -95,7 +111,21 @@ public class MainActivity extends AppCompatActivity {
                 .client(okHttpClient)
                 .addConverterFactory(GsonConverterFactory.create())
                 .build();
+        // start loading
+        mCustomLoader.startLoadingAlertBox();
         getPostFromWeb = retrofit.create(GetPostFromWeb.class);
+        getVideoPost();
+        swipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
+            @Override
+            public void onRefresh() {
+                postAdapter.notifyDataSetChanged();
+                swipeRefreshLayout.setRefreshing(false);
+            }
+        });
+
+    }
+
+    private void getVideoPost() {
         Call<List<PostModel>> call = getPostFromWeb.getPost();
         call.enqueue(new Callback<List<PostModel>>() {
             @Override
@@ -105,6 +135,8 @@ public class MainActivity extends AppCompatActivity {
                     List<PostModel> data = response.body();
                     postAdapter.setPostAdapter(data);
                     video_list_items.setAdapter(postAdapter);
+                    //setNotificationEnable();
+                    mCustomLoader.setCancelAlertDailog();
                 }else{
                     Log.d("error_inner", "" + response.message());
                 }
@@ -113,6 +145,26 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onFailure(Call<List<PostModel>> call, Throwable t) {
                 Log.d("error_main", "" + t.getStackTrace());
+            }
+        });
+    }
+
+    private void setNotificationEnable() {
+        String manufacturer = Build.MANUFACTURER;
+        String model = Build.MODEL;
+        int version = Build.VERSION.SDK_INT;
+        String versionRelease = Build.VERSION.RELEASE;
+
+        Call<ResponseBody> call = getPostFromWeb.notificationSetup("createdinam@gmail.com","917487541105","personal_user",model,""+version);
+        call.enqueue(new Callback<ResponseBody>() {
+            @Override
+            public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
+                Toast.makeText(MainActivity.this, "response :"+response.isSuccessful(), Toast.LENGTH_SHORT).show();
+            }
+
+            @Override
+            public void onFailure(Call<ResponseBody> call, Throwable t) {
+                Toast.makeText(MainActivity.this, t.getLocalizedMessage(), Toast.LENGTH_SHORT).show();
             }
         });
     }
@@ -168,7 +220,7 @@ public class MainActivity extends AppCompatActivity {
             switch (event.getAction()) {
                 case KeyEvent.ACTION_DOWN:
                     if (event.getDownTime() - lastPressedTime < PERIOD) {
-                        getLogoutActivity();
+                        finish();
                     } else {
                         Toast.makeText(getApplicationContext(), "Press again to exit.",
                                 Toast.LENGTH_SHORT).show();
@@ -178,5 +230,18 @@ public class MainActivity extends AppCompatActivity {
             }
         }
         return false;
+    }
+
+    @Override
+    public boolean onNavigationItemSelected(@NonNull MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.services:
+                Toast.makeText(this, "Service", Toast.LENGTH_SHORT).show();
+                break;
+            case R.id.about:
+                Toast.makeText(this, "About", Toast.LENGTH_SHORT).show();
+                break;
+        }
+        return true;
     }
 }
