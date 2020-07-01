@@ -7,6 +7,7 @@ import android.content.SharedPreferences;
 import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Handler;
 import android.util.Log;
 import android.widget.Toast;
 import android.widget.VideoView;
@@ -18,27 +19,24 @@ public class SplashActivity extends AppCompatActivity {
     private static Boolean status;
     SharedPreferences sharedPreferences;
     GlobalInit globalInit;
-    VideoView mVideoView;
-    private static Uri video_link;
+    /**
+     * Duration of wait
+     **/
+    private final int SPLASH_DISPLAY_LENGTH = 1000;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_splash);
-        mVideoView = findViewById(R.id.splash_view_video);
-        video_link = Uri.parse("android.resource://" + getPackageName() + "/" + R.raw.intro_video);
-        mVideoView.setVideoURI(video_link);
-        mVideoView.start();
         sharedPreferences = getSharedPreferences("MySharedPref", MODE_PRIVATE);
         status = sharedPreferences.getBoolean("status", false);
         user_type = sharedPreferences.getString("user_type", "");
-        Log.d("status",""+status);
-        mVideoView.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
+        Log.d("status", "" + status);
+
+        new Handler().postDelayed(new Runnable() {
             @Override
-            public void onCompletion(MediaPlayer mp) {
+            public void run() {
                 if (globalInit.getInstance(getApplicationContext()).isNetworkAvaliable(SplashActivity.this)) {
-//                    Toast.makeText(SplashActivity.this, "You are online!!!!", Toast.LENGTH_SHORT).show();
-//                    Toast.makeText(SplashActivity.this, "Internet Connection Found!", Toast.LENGTH_SHORT).show();
                     if (status) {
                         startDashboard();
                     } else {
@@ -49,7 +47,7 @@ public class SplashActivity extends AppCompatActivity {
                     Log.v("Home", "############################You are not online!!!!");
                 }
             }
-        });
+        }, SPLASH_DISPLAY_LENGTH);
     }
 
     private void startLoginAgain() {

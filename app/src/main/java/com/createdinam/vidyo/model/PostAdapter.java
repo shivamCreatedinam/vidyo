@@ -2,11 +2,14 @@ package com.createdinam.vidyo.model;
 
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.Point;
 import android.net.Uri;
 import android.util.Log;
+import android.view.Display;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.WindowManager;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -16,6 +19,7 @@ import androidx.annotation.Nullable;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
+import com.bumptech.glide.RequestManager;
 import com.createdinam.vidyo.R;
 import com.google.android.exoplayer2.C;
 import com.google.android.exoplayer2.DefaultLoadControl;
@@ -30,12 +34,16 @@ import com.google.android.exoplayer2.Timeline;
 import com.google.android.exoplayer2.source.ExtractorMediaSource;
 import com.google.android.exoplayer2.source.MediaSource;
 import com.google.android.exoplayer2.source.TrackGroupArray;
+import com.google.android.exoplayer2.trackselection.AdaptiveTrackSelection;
 import com.google.android.exoplayer2.trackselection.DefaultTrackSelector;
+import com.google.android.exoplayer2.trackselection.TrackSelection;
 import com.google.android.exoplayer2.trackselection.TrackSelectionArray;
 import com.google.android.exoplayer2.trackselection.TrackSelector;
 import com.google.android.exoplayer2.ui.AspectRatioFrameLayout;
 import com.google.android.exoplayer2.ui.PlayerView;
+import com.google.android.exoplayer2.upstream.BandwidthMeter;
 import com.google.android.exoplayer2.upstream.DataSource;
+import com.google.android.exoplayer2.upstream.DefaultBandwidthMeter;
 import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory;
 import com.google.android.exoplayer2.util.Util;
 
@@ -48,7 +56,14 @@ public class PostAdapter extends RecyclerView.Adapter<PostAdapter.PostHolder> im
     String name,path;
     List<PostModel> emails;
     Context mContext;
+    // vars
     SimpleExoPlayer exoPlayer;
+    private PlayerView videoSurfaceView;
+    private int videoSurfaceDefaultHeight = 0;
+    private int screenDefaultHeight = 0;
+    private RequestManager requestManager;
+    private int playPosition = -1;
+    private boolean isVideoViewAdded;
     public PostAdapter(List<PostModel> emails, Context mContext) {
         this.emails = emails;
         this.mContext = mContext;
@@ -56,7 +71,24 @@ public class PostAdapter extends RecyclerView.Adapter<PostAdapter.PostHolder> im
     }
 
     private void initPlayer() {
+        Display display = ((WindowManager) mContext.getSystemService(Context.WINDOW_SERVICE)).getDefaultDisplay();
+        Point point = new Point();
+        display.getSize(point);
+        videoSurfaceDefaultHeight = point.x;
+        screenDefaultHeight = point.y;
+        videoSurfaceView = new PlayerView(mContext);
+        videoSurfaceView.setResizeMode(AspectRatioFrameLayout.RESIZE_MODE_ZOOM);
 
+        BandwidthMeter bandwidthMeter = new DefaultBandwidthMeter();
+        TrackSelection.Factory videoTrackSelectionFactory =
+                new AdaptiveTrackSelection.Factory(bandwidthMeter);
+        TrackSelector trackSelector =
+                new DefaultTrackSelector(videoTrackSelectionFactory);
+        // 2. Create the player
+        exoPlayer = ExoPlayerFactory.newSimpleInstance(mContext, trackSelector);
+        // Bind the player to the view.
+        videoSurfaceView.setUseController(false);
+        videoSurfaceView.setPlayer(exoPlayer);
     }
 
     public void setPostAdapter(List<PostModel> emails) {
@@ -72,47 +104,8 @@ public class PostAdapter extends RecyclerView.Adapter<PostAdapter.PostHolder> im
     }
 
     @Override
-    public void onBindViewHolder(@NonNull PostHolder holder, int position) {
-        id = emails.get(position).getId();
-        name = emails.get(position).getTitle();
-        holder.title_view.setText(name);
-        Glide.with(mContext)
-                .load(emails.get(position).getFeatured_image().getLarge()) // image url
-                .placeholder(R.drawable.country) // any placeholder to load at start
-                .error(R.drawable.country)  // any image in case of error
-                .centerCrop()
-                .into(holder.post_title_images);  // resizing
-        // hide image view
-        holder.post_title_images.setVisibility(View.GONE);
-        // share btn
-        holder.share_btn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent sendIntent = new Intent();
-                sendIntent.setAction(Intent.ACTION_SEND);
-                sendIntent.putExtra(Intent.EXTRA_TEXT,name);
-                sendIntent.setType("text/plain");
-                Intent.createChooser(sendIntent,"Share via");
-                mContext.startActivity(sendIntent);
-            }
-        });
-        // set player
-        TrackSelector trackSelector = new DefaultTrackSelector();
-        exoPlayer = ExoPlayerFactory.newSimpleInstance(mContext, trackSelector);
-        holder.simpleExoPlayerView.setShowBuffering(true);
-        exoPlayer.addListener(this);
-        holder.simpleExoPlayerView.setPlayer(exoPlayer);
-        exoPlayer.setPlayWhenReady(true);
-        exoPlayer.setVideoScalingMode(C.VIDEO_SCALING_MODE_SCALE_TO_FIT_WITH_CROPPING);
-        if (exoPlayer.isLoading()){
-            Toast.makeText(mContext, "Loading..", Toast.LENGTH_SHORT).show();
-        }else{
-            Toast.makeText(mContext, "Playing..", Toast.LENGTH_SHORT).show();
-        }
-        DataSource.Factory dataSourceFactory = new DefaultDataSourceFactory(mContext, Util.getUserAgent(mContext, "VideoPlayer"));
-        MediaSource videoSource = new ExtractorMediaSource.Factory(dataSourceFactory).createMediaSource(Uri.parse(emails.get(position).getUpload_videos()));
-        exoPlayer.prepare(videoSource);
-
+    public void onBindViewHolder(@NonNull PostHolder holder, final int position) {
+        holder.setDataPlayer(emails.get(position),mContext);
     }
 
     @Override
@@ -199,5 +192,45 @@ public class PostAdapter extends RecyclerView.Adapter<PostAdapter.PostHolder> im
             title_view = itemView.findViewById(R.id.title_view);
             simpleExoPlayerView = itemView.findViewById(R.id.post_player);
         }
+
+        void setDataPlayer(final PostModel postModel, final Context mContext){
+            id = postModel.getId();
+            name = postModel.getTitle();
+            title_view.setText(name);
+            Glide.with(mContext)
+                    .load(postModel.getFeatured_image().getLarge()) // image url
+                    .placeholder(R.drawable.country) // any placeholder to load at start
+                    .error(R.drawable.country)  // any image in case of error
+                    .centerCrop()
+                    .into(post_title_images);  // resizing
+            // hide image view
+            post_title_images.setVisibility(View.GONE);
+            // share btn
+            share_btn.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    Intent sendIntent = new Intent();
+                    sendIntent.setAction(Intent.ACTION_SEND);
+                    sendIntent.putExtra(Intent.EXTRA_SUBJECT,"Vidyo");
+                    sendIntent.putExtra(Intent.EXTRA_TEXT,"Application Link : "+postModel.getUpload_videos());
+                    sendIntent.setType("text/plain");
+                    Intent.createChooser(sendIntent,"Share via");
+                    mContext.startActivity(sendIntent);
+                }
+            });
+            // set player
+            TrackSelector trackSelector = new DefaultTrackSelector();
+            exoPlayer = ExoPlayerFactory.newSimpleInstance(mContext, trackSelector);
+            simpleExoPlayerView.setShowBuffering(true);
+            // exoPlayer.addListener(mContext);
+            exoPlayer.setVideoScalingMode(C.VIDEO_SCALING_MODE_SCALE_TO_FIT_WITH_CROPPING);
+            DataSource.Factory dataSourceFactory = new DefaultDataSourceFactory(mContext, Util.getUserAgent(mContext, "VideoPlayer"));
+            MediaSource videoSource = new ExtractorMediaSource.Factory(dataSourceFactory).createMediaSource(Uri.parse(postModel.getUpload_videos()));
+            exoPlayer.prepare(videoSource);
+            // exoPlayer.setPlayWhenReady(false);
+            simpleExoPlayerView.setPlayer(exoPlayer);
+
+        }
+
     }
 }

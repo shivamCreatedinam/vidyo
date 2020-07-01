@@ -18,10 +18,13 @@
             android:layout_alignParentRight="true"
             android:layout_alignParentBottom="true"
             android:background="#000"
+            app:repeat_toggle_modes="one"
+            app:controller_layout_id="@layout/custom_controls"
             android:importantForAutofill="yes"
             app:show_buffering="true" />
 
         <ImageView
+            android:visibility="gone"
             android:id="@+id/post_title_images"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -32,16 +35,36 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:gravity="center"
-            android:text="@string/app_name" />
+            android:text="@string/app_name"
+            android:textColor="@color/colorPrimary"/>
+
+        <ImageView
+            android:id="@+id/download_btn"
+            android:layout_width="45dp"
+            android:layout_height="45dp"
+            android:layout_marginRight="10dp"
+            android:layout_marginBottom="220dp"
+            android:layout_gravity="bottom|end"
+            android:src="@drawable/share_btn" />
 
         <ImageView
             android:id="@+id/share_btn"
             android:layout_width="45dp"
             android:layout_height="45dp"
             android:layout_marginRight="10dp"
-            android:layout_marginBottom="60dp"
+            android:layout_marginBottom="150dp"
             android:layout_gravity="bottom|end"
-            android:src="@drawable/share_link"/>
+            android:src="@drawable/whatsapp_btn" />
+
+        <ImageView
+            android:id="@+id/extra_btn"
+            android:layout_width="45dp"
+            android:layout_height="45dp"
+            android:layout_marginRight="10dp"
+            android:layout_marginBottom="80dp"
+            android:layout_gravity="bottom|end"
+            android:src="@drawable/btn_one"/>
+
     </androidx.cardview.widget.CardView>
 
 </RelativeLayout>

@@ -1,14 +1,24 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
-    <group android:id="@+id/bottom"
-        android:checkableBehavior="single">
-        <item android:id="@+id/services"
-            android:icon="@drawable/ic_all_inclusive"
-            android:title="Status"></item>
-        <item android:id="@+id/contact"
-            android:title=" " />
-        <item android:id="@+id/about"
-            android:icon="@drawable/ic_ev_station"
-            android:title="Setting"></item>
-    </group>
+
+    <item
+        android:id="@+id/item0"
+        android:title="share"
+        android:icon="@drawable/ic_baseline_share"/>
+
+    <item
+        android:id="@+id/item1"
+        android:title="start"
+        android:icon="@drawable/ic_dialog_close_dark"/>
+
+    <item
+        android:id="@+id/item2"
+        android:title="center"
+        android:icon="@drawable/ic_audiotrack_dark"/>
+
+    <item
+        android:id="@+id/item3"
+        android:title="end"
+        android:icon="@drawable/ic_baseline_camera"/>
+
 </menu>

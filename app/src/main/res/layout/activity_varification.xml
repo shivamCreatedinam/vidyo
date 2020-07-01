@@ -53,7 +53,8 @@
             android:layout_below="@id/textView"
             android:layout_centerHorizontal="true"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content" />
+            android:layout_height="wrap_content"
+            android:visibility="invisible"/>
 
         <EditText
             android:id="@+id/editTextCode"
@@ -63,8 +64,9 @@
             android:layout_centerHorizontal="true"
             android:layout_marginTop="10dp"
             android:digits="0123456789"
+            android:textAlignment="center"
             android:drawablePadding="10dp"
-            android:hint="enter verification code"
+            android:hint="Enter Verification Code"
             android:inputType="phone"
             android:maxLength="10" />
 

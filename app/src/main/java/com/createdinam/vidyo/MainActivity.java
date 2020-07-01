@@ -5,8 +5,10 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.NotificationCompat;
 import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.LinearSnapHelper;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
+import androidx.viewpager2.widget.ViewPager2;
 
 import android.app.NotificationManager;
 import android.app.PendingIntent;
@@ -19,11 +21,13 @@ import android.util.Log;
 import android.view.KeyEvent;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.Toast;
 
 import com.android.volley.RequestQueue;
 import com.android.volley.toolbox.Volley;
+import com.bumptech.glide.RequestManager;
 import com.createdinam.vidyo.customloder.CustomLoader;
 import com.createdinam.vidyo.global.CurvedBottomNavigationView;
 import com.createdinam.vidyo.global.Meme;
@@ -32,8 +36,10 @@ import com.createdinam.vidyo.global.UnsafeOkHttpClient;
 import com.createdinam.vidyo.model.GetPostFromWeb;
 import com.createdinam.vidyo.model.PostAdapter;
 import com.createdinam.vidyo.model.PostModel;
+import com.createdinam.vidyo.model.SnapHelperOneByOne;
 import com.google.android.exoplayer2.ExoPlaybackException;
 import com.google.android.exoplayer2.PlaybackParameters;
+import com.google.android.exoplayer2.ui.PlayerView;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.firebase.messaging.FirebaseMessaging;
@@ -45,6 +51,8 @@ import java.util.List;
 import java.util.Objects;
 
 import cn.pedant.SweetAlert.SweetAlertDialog;
+import me.ibrahimsn.lib.OnItemSelectedListener;
+import me.ibrahimsn.lib.SmoothBottomBar;
 import okhttp3.OkHttpClient;
 import okhttp3.ResponseBody;
 import retrofit2.Call;
@@ -53,7 +61,9 @@ import retrofit2.Response;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 
-public class MainActivity extends AppCompatActivity  implements BottomNavigationView.OnNavigationItemSelectedListener {
+import static android.view.View.INVISIBLE;
+
+public class MainActivity extends AppCompatActivity {
     private static SharedPreferences sharedPreferences;
     private static String user_type;
     private static Boolean status;
@@ -62,28 +72,35 @@ public class MainActivity extends AppCompatActivity  implements BottomNavigation
     private static final int PERIOD = 2000;
     SweetAlertDialog sweetAlertDialog;
     private CustomLoader mCustomLoader;
-    FloatingActionButton mFloatingActionButton;
-    RecyclerView video_list_items;
+    ViewPager2 video_list_items;
     Retrofit retrofit;
     List<PostModel> mList;
     GetPostFromWeb getPostFromWeb;
     PostAdapter postAdapter;
     SwipeRefreshLayout swipeRefreshLayout;
+    LinearLayoutManager llm;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         // init navigation
-        CurvedBottomNavigationView mView = findViewById(R.id.customBottomBar);
-        mView.inflateMenu(R.menu.bottom_navigation_items);
-        //mView.setSelectedItemId(R.id.action_schedules);
-        mView.setOnNavigationItemSelectedListener(MainActivity.this);
+        SmoothBottomBar bottomNavigation = findViewById(R.id.bottomBar);
+        bottomNavigation.setOnItemSelectedListener(new OnItemSelectedListener() {
+            @Override
+            public boolean onItemSelect(int i) {
+                Toast.makeText(MainActivity.this, "Position -> "+i, Toast.LENGTH_SHORT).show();
+                if (i==1){
+                    startActivity(new Intent(MainActivity.this,FunnyStatusActivity.class));
+                }
+                return true;
+            }
+        });
         // init
         swipeRefreshLayout = findViewById(R.id.pull_down_to_refresh);
-        mFloatingActionButton = findViewById(R.id.upload_new_feed);
         video_list_items = findViewById(R.id.video_list_items);
-        LinearLayoutManager layoutManager = new LinearLayoutManager(this);
-        video_list_items.setLayoutManager(layoutManager);
+//        LinearLayoutManager layoutManager = new LinearLayoutManager(this);
+//        video_list_items.setLayoutManager(layoutManager);
+//        llm = (LinearLayoutManager) video_list_items.getLayoutManager();
         postAdapter = new PostAdapter(mList,this);
         // setup
         requestQueue = Volley.newRequestQueue(getApplicationContext());
@@ -98,12 +115,6 @@ public class MainActivity extends AppCompatActivity  implements BottomNavigation
         mCustomLoader = new CustomLoader(MainActivity.this);
         // request data
         requestQueue = Volley.newRequestQueue(MainActivity.this.getApplicationContext());
-        mFloatingActionButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                clickEventInFloationgAction();
-            }
-        });
         // get request
         OkHttpClient okHttpClient = UnsafeOkHttpClient.getUnsafeOkHttpClient();
         retrofit = new Retrofit.Builder()
@@ -118,11 +129,11 @@ public class MainActivity extends AppCompatActivity  implements BottomNavigation
         swipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
             @Override
             public void onRefresh() {
-                postAdapter.notifyDataSetChanged();
+                //postAdapter.notifyDataSetChanged();
+                getVideoPost();
                 swipeRefreshLayout.setRefreshing(false);
             }
         });
-
     }
 
     private void getVideoPost() {
@@ -169,7 +180,7 @@ public class MainActivity extends AppCompatActivity  implements BottomNavigation
         });
     }
 
-    private void clickEventInFloationgAction() {
+    private void clickEventInFloatingAction() {
         Toast.makeText(this, "You Clicked!", Toast.LENGTH_SHORT).show();
     }
 
@@ -214,6 +225,7 @@ public class MainActivity extends AppCompatActivity  implements BottomNavigation
         Button btn = sweetAlertDialog.findViewById(R.id.confirm_button);
         btn.setBackgroundColor(ContextCompat.getColor(MainActivity.this, R.color.text_color));
     }
+
     @Override
     public boolean onKeyDown(int keyCode, KeyEvent event) {
         if (event.getKeyCode() == KeyEvent.KEYCODE_BACK) {
@@ -232,16 +244,4 @@ public class MainActivity extends AppCompatActivity  implements BottomNavigation
         return false;
     }
 
-    @Override
-    public boolean onNavigationItemSelected(@NonNull MenuItem item) {
-        switch (item.getItemId()) {
-            case R.id.services:
-                Toast.makeText(this, "Service", Toast.LENGTH_SHORT).show();
-                break;
-            case R.id.about:
-                Toast.makeText(this, "About", Toast.LENGTH_SHORT).show();
-                break;
-        }
-        return true;
-    }
 }

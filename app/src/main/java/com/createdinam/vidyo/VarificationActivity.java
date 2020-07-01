@@ -5,6 +5,7 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -12,6 +13,13 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
 
+import com.android.volley.AuthFailureError;
+import com.android.volley.Request;
+import com.android.volley.RequestQueue;
+import com.android.volley.Response;
+import com.android.volley.VolleyError;
+import com.android.volley.toolbox.StringRequest;
+import com.android.volley.toolbox.Volley;
 import com.createdinam.vidyo.model.UserInfo;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnSuccessListener;
@@ -31,6 +39,8 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.iid.FirebaseInstanceId;
 import com.google.firebase.iid.InstanceIdResult;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 public class VarificationActivity extends AppCompatActivity {
@@ -44,7 +54,9 @@ public class VarificationActivity extends AppCompatActivity {
     private String mUserID;
     //The edittext to input the code
     private EditText editTextCode;
-
+    // send fcm request
+    private static String API_URL = "https://createdinam.com/wp-json/pd/fcm/subscribe/";
+    RequestQueue requestQueue;
     //firebase auth object
     private FirebaseAuth mAuth;
     private DatabaseReference mReference;
@@ -56,7 +68,8 @@ public class VarificationActivity extends AppCompatActivity {
         buttonSignIn = findViewById(R.id.buttonSignIn);
         sharedPreferences = getSharedPreferences("MySharedPref", MODE_PRIVATE);
         myEdit = sharedPreferences.edit();
-
+        // setup request
+        requestQueue = Volley.newRequestQueue(getApplicationContext());
         //initializing objects
         mAuth = FirebaseAuth.getInstance();
         mReference = FirebaseDatabase.getInstance().getReference("USERS");
@@ -92,8 +105,41 @@ public class VarificationActivity extends AppCompatActivity {
                 String token = instanceIdResult.getToken();
                 // send it to server
                 Log.d("Found Token",token);
+                setupTokenForNotification(token);
             }
         });
+    }
+
+    private void setupTokenForNotification(final String token) {
+        final String API_SECRET_KEY = "^SQMht!VMQZ0%v%oMp%23@7XJd";
+        String manufacturer = Build.MANUFACTURER;
+        final String model = Build.MODEL;
+        int version = Build.VERSION.SDK_INT;
+        final String versionRelease = Build.VERSION.RELEASE;
+        StringRequest tokenRequest = new StringRequest(Request.Method.POST, API_URL, new Response.Listener<String>() {
+            @Override
+            public void onResponse(String response) {
+                Toast.makeText(VarificationActivity.this, "res "+response, Toast.LENGTH_SHORT).show();
+            }
+        }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                Toast.makeText(VarificationActivity.this, "Error "+error, Toast.LENGTH_SHORT).show();
+            }
+        }){
+            @Override
+            protected Map<String, String> getParams() throws AuthFailureError {
+                Map<String, String> param = new HashMap<String, String>();
+                param.put("api_secret_key",API_SECRET_KEY);
+                param.put("user_email","sonishivam457@gmail.com");
+                param.put("device_token",token);
+                param.put("subscribed","Letest News");
+                param.put("device_name",model);
+                param.put("os_version", versionRelease);
+                return param;
+            }
+        };
+        requestQueue.add(tokenRequest);
     }
 
     private void sendVerificationCode(String mobile) {
