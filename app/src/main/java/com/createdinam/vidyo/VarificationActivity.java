@@ -74,8 +74,6 @@ public class VarificationActivity extends AppCompatActivity {
         mAuth = FirebaseAuth.getInstance();
         mReference = FirebaseDatabase.getInstance().getReference("USERS");
         editTextCode = findViewById(R.id.editTextCode);
-
-
         //getting mobile number from the previous activity
         //and sending the verification code to the number
         Intent intent = getIntent();

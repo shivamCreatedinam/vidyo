@@ -8,16 +8,12 @@
     android:orientation="vertical">
 
     <pl.droidsonroids.gif.GifImageView
-        android:id="@+id/custom_loading_dailog"
-        android:layout_width="120dp"
-        android:layout_height="120dp"
-        android:src="@drawable/loading_2"
+        android:layout_width="60dp"
+        android:layout_height="60dp"
+        android:src="@drawable/loader"
         android:foregroundGravity="center"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
-
-
-
 </androidx.constraintlayout.widget.ConstraintLayout>

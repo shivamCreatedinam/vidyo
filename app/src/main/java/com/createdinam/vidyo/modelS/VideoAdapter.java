@@ -73,21 +73,12 @@ public class VideoAdapter extends RecyclerView.Adapter<VideoAdapter.videoViewHol
                             mc = new MediaController(mContext);
                             videoView.setMediaController(mc);
                             mc.setAnchorView(videoView);
-
                             ((ViewGroup) mc.getParent()).removeView(mc);
                             mc.setVisibility(View.INVISIBLE);
                         }
                     });
                     progressBar.setVisibility(View.GONE);
                     mp.start();
-//                    float videoratio = mp.getVideoWidth() / (float) mp.getVideoHeight();
-//                    float screenratioheight = videoView.getWidth() / (float) videoView.getHeight();
-//                    float scale = videoratio / screenratioheight;
-//                    if (scale >= 1f) {
-//                        videoView.setScaleX(scale);
-//                    } else {
-//                        videoView.setScaleY(1f / scale);
-//                    }
                 }
             });
 

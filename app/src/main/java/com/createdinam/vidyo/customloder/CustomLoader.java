@@ -21,13 +21,12 @@ public class CustomLoader {
         AlertDialog.Builder builder = new AlertDialog.Builder(mActivity);
         LayoutInflater inflater = mActivity.getLayoutInflater();
         builder.setView(inflater.inflate(R.layout.custom_loader_view,null));
-        builder.setCancelable(false);
+        //builder.setCancelable(false);
         // show alert
         mAlertDialog = builder.create();
         mAlertDialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
         mAlertDialog.show();
     }
-
     public void setCancelAlertDailog(){
         mAlertDialog.dismiss();
     }

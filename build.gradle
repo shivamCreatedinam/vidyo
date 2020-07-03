@@ -22,6 +22,7 @@ allprojects {
         google()
         jcenter()
         maven { url 'https://tokbox.bintray.com/maven' }
+        maven { url 'https://jitpack.io' }
         flatDir {
             dirs 'libs'
         }
