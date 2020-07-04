@@ -78,5 +78,7 @@ dependencies {
     implementation 'de.hdodenhof:circleimageview:3.1.0'
     // facebook sdk
     implementation 'com.facebook.android:facebook-android-sdk:[5,6)'
+    // google play services
+    implementation 'com.google.android.gms:play-services-auth:18.0.0'
 }
 apply plugin: 'com.google.gms.google-services'
